@@ -1,12 +1,13 @@
 package models
 
 type Account struct {
-	ID       int64  `db:"id"`
-	Name     string `db:"name"`
-	Phone    string `db:"phone"`
-	Email    string `db:"email"`
-	Username string `db:"username"`
-	Password string `db:"password"`
+	ID       string `db:"id" json:"-"`
+	Name     string `db:"name" json:"Name"`
+	Phone    string `db:"phone" json:"Phone"`
+	Email    string `db:"email" json:"Email"`
+	Username string `db:"username" json:"Username"`
+	Password string `db:"password" json:"-"`
+	Token    string `json:"token"`
 }
 
 

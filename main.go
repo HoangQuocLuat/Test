@@ -4,12 +4,14 @@ import (
 	"thuchanh_go/database"
 	handler "thuchanh_go/handler/account"
 	logic "thuchanh_go/logic/account"
+	"thuchanh_go/redis"
 	router "thuchanh_go/router/acc"
 
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
+	//init sql
 	sql := &database.Sql{
 		UserName: "postgres",
 		Password: "HL123",
@@ -17,8 +19,13 @@ func main() {
 	}
 	sql.Connect()
 	defer sql.Close()
-
-	// init server
+	//init redis
+	redis := &redis.Redis{
+		Addr: 		"localhost:6379",
+		Password:   "",   
+	}
+	redis.Connect()
+	
 	r := gin.New()
 	// r.Use(cors.New(cors.Config{
 	// 	AllowOrigins:     []string{"*"},
