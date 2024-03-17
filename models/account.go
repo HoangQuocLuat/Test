@@ -1,7 +1,7 @@
 package models
 
 type Account struct {
-	ID       string `db:"id" json:"-"`
+	ID       string `db:"id"`
 	Name     string `db:"name" json:"Name"`
 	Phone    string `db:"phone" json:"Phone"`
 	Email    string `db:"email" json:"Email"`

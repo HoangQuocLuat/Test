@@ -42,6 +42,7 @@ func main() {
 
 	userHandler := handler.AccountHandler{
 		UserLogic: logic.NewAccRegisterLogic(sql),
+		Rd       : redis,
 	}
 	api := router.API{
 		Gin:        r,
