@@ -1,2 +1,2 @@
 run:
-	go run main -f ./config/account.yaml
+	go run main.go -f ./config/account.yaml

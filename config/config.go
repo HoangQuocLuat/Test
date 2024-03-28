@@ -2,6 +2,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 
 	"gopkg.in/yaml.v3"
@@ -29,11 +30,14 @@ func LoadConfig(filename string) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
+	os.Stdout.Write(data)
 
 	var cfg Config
 	err = yaml.Unmarshal(data, &cfg)
 	if err != nil {
 		return nil, err
 	}
+	fmt.Printf(cfg.Database.DbName)
+	fmt.Printf(cfg.Redis.Host)
 	return &cfg, nil
 }
