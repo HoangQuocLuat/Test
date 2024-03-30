@@ -2,6 +2,8 @@ package chathandler
 
 import (
 	"net/http"
+	"thuchanh_go/logic"
+	"thuchanh_go/models"
 	"thuchanh_go/types/req"
 	"thuchanh_go/types/res"
 	"thuchanh_go/ws"
@@ -11,12 +13,14 @@ import (
 )
 
 type Handler struct {
-	hub *ws.Hub
+	Chat logic.ChatLogic
+	Hub  *ws.Hub
 }
 
-func NewHandler(h *ws.Hub) *Handler {
+func NewHandler(h *ws.Hub, c logic.ChatLogic) *Handler {
 	return &Handler{
-		hub: h,
+		Chat: c,
+		Hub: h,
 	}
 }
 
@@ -26,13 +30,22 @@ func (h *Handler) CreateRoom(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	h.hub.Rooms[req.ID] = &ws.Room{
+	h.Hub.Rooms[req.ID] = &ws.Room{
 		ID:      req.ID,
 		Name:    req.Name,
 		Clients: make(map[string]*ws.Client),
 	}
 
-	c.JSON(http.StatusOK, req)
+	res, err := h.Chat.Insert(&gin.Context{}, req)
+	if err != nil {
+		c.JSON(http.StatusConflict, models.Response{
+			StatusCode: http.StatusConflict,
+			Message:    "không tạo được phòng",
+			Data:       nil,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, res)
 }
 
 // xử lý websocket
@@ -72,19 +85,19 @@ func (h *Handler) JoinRoom(c *gin.Context) {
 	}
 
 	//Đăng ký một client mới thông qua channal đăng ký
-	h.hub.Register <- cl
+	h.Hub.Register <- cl
 	// và phát tin nhắn đó
-	h.hub.Broadcast <- m
+	h.Hub.Broadcast <- m
 	//writeMess()
 	go cl.WriteMess()
 	//readMess()
-	cl.ReadMess(h.hub)
+	cl.ReadMess(h.Hub)
 }
 
 func (h *Handler) GetRooms(c *gin.Context) {
 	rooms := make([]res.RoomRes, 0)
 
-	for _, r := range h.hub.Rooms {
+	for _, r := range h.Hub.Rooms {
 		rooms = append(rooms, res.RoomRes{
 			ID:   r.ID,
 			Name: r.Name,
@@ -98,14 +111,14 @@ func (h *Handler) GetClient(c *gin.Context) {
 	var client []res.ClientRes
 	roomId := c.Param("roomId")
 
-	if _, ok := h.hub.Rooms[roomId]; !ok {
+	if _, ok := h.Hub.Rooms[roomId]; !ok {
 		client = make([]res.ClientRes, 0)
 		c.JSON(http.StatusOK, client)
 	}
 
-	for _, c := range h.hub.Rooms[roomId].Clients{
+	for _, c := range h.Hub.Rooms[roomId].Clients {
 		client = append(client, res.ClientRes{
-			ID : c.ID,
+			ID:       c.ID,
 			Username: c.Username,
 		})
 	}

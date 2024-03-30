@@ -10,6 +10,7 @@ import (
 	handler "thuchanh_go/handler/account"
 	chathandler "thuchanh_go/handler/chat"
 	logic "thuchanh_go/logic/account"
+	chatlogic "thuchanh_go/logic/chat"
 	"thuchanh_go/redis"
 	router "thuchanh_go/router/acc"
 	"thuchanh_go/ws"
@@ -28,7 +29,7 @@ func main() {
 		log.Fatalf("failed to load config: %v", err)
 	}
 
-	// Kết nối cơ sở dữ liệu
+	// Kết nối database
 	sql := &database.Sql{
 		UserName: cfg.Database.Username,
 		Password: cfg.Database.Password,
@@ -44,21 +45,27 @@ func main() {
 	}
 	redis.Connect()
 
-	//Kết nối web socket
+	//Hand Chat
 	hub := ws.NewHub()
-	wsHandler := chathandler.NewHandler(hub)
-    go hub.Run()
+	wsHandler := chathandler.Handler{
+		Chat: chatlogic.NewChatLogic(sql),
+		Hub:  hub,
+	}
+	go hub.Run()
 
-	r := gin.New()
+	//Hand Account
 	userHandler := handler.AccountHandler{
 		UserLogic: logic.NewAccRegisterLogic(sql),
 		Rd:        redis,
 	}
-	// chatHandler := handler.
+
+	//khởi tạo gin
+	r := gin.New()
+	// Router
 	api := router.API{
 		Gin:        r,
 		AccHandler: userHandler,
-		WebHandler: *wsHandler,
+		WebHandler: wsHandler,
 	}
 	api.SetupRoute()
 

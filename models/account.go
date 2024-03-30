@@ -8,13 +8,6 @@ type Account struct {
 	Username string `db:"username" json:"Username"`
 	Password string `db:"password" json:"-"`
 	Token    string `json:"token"`
-	RoomChat *RoomChat   `db:"roomchat"`
-}
-
-type RoomChat struct {
-	IDRoomChat 		string 	`db:"idromchat"`
-	Message	 	    string 	`db:"message"`
-	CreateDate      string  `db:"createdate"`
 }
 
 

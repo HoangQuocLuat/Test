@@ -26,6 +26,7 @@ func (h *Hub) Run() {
 	for {
 		select {
 		case cl := <- h.Register:
+			// case này để đăng ký người dùng vào phòng
 			// kiểm tra xem phòng có tồn tại hay không
 			if _, ok := h.Rooms[cl.RoomID]; ok {
 				r := h.Rooms[cl.RoomID]
@@ -35,6 +36,7 @@ func (h *Hub) Run() {
 				}
 			}
 		case cl := <- h.Unregister:
+			// case này để người dùng thoát khỏi phòng
 			if _, ok:= h.Rooms[cl.RoomID]; ok {
 				//kiểm tra xem khách hàng có trong phòng không và xóa đi
 				if _, ok := h.Rooms[cl.RoomID].Clients[cl.ID]; ok {
@@ -46,14 +48,13 @@ func (h *Hub) Run() {
 							Username: cl.Username,
 						}
 					}
-
 					delete(h.Rooms[cl.RoomID].Clients, cl.ID)
 					close(cl.Message)
 				}
 			}
 		case m  := <- h.Broadcast:
+			// thực hiện hành động khi có tin nhắn được broadcast(phát tin)
 			if _, ok := h.Rooms[m.RoomID]; ok {
-
 				for _, cl := range h.Rooms[m.RoomID].Clients {
 					cl.Message <- m
 				}
