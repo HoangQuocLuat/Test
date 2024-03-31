@@ -7,3 +7,7 @@ var (
 	RegisFail = errors.New("Đăng ký thất bại")
 	UserNotFoud = errors.New("Người dùng không tồn tại")
 )
+
+var (
+	RoomNotFoud = errors.New("Room không tồn tại")
+)

@@ -13,7 +13,6 @@ import (
 	chatlogic "thuchanh_go/logic/chat"
 	"thuchanh_go/redis"
 	router "thuchanh_go/router/acc"
-	"thuchanh_go/ws"
 
 	"github.com/gin-gonic/gin"
 )
@@ -46,12 +45,12 @@ func main() {
 	redis.Connect()
 
 	//Hand Chat
-	hub := ws.NewHub()
+	// hub := ws.NewHub()
 	wsHandler := chathandler.Handler{
 		Chat: chatlogic.NewChatLogic(sql),
-		Hub:  hub,
+		// Hub:  hub,
 	}
-	go hub.Run()
+	// go hub.Run()
 
 	//Hand Account
 	userHandler := handler.AccountHandler{

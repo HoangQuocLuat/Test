@@ -6,7 +6,8 @@ type Room struct {
 }
 
 type Message struct {
-	ID     string `db:"id"`
-	RoomID string `db:"roomId"`
-	UserID string `db:"userId"`
+	ID      string `db:"id"`
+	RoomID  string `db:"roomId"`
+	UserID  string `db:"userId"`
+	Content string `db:"content"`
 }

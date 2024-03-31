@@ -5,7 +5,6 @@ import (
 	"thuchanh_go/logic"
 	"thuchanh_go/models"
 	"thuchanh_go/types/req"
-	"thuchanh_go/types/res"
 	"thuchanh_go/ws"
 
 	"github.com/gin-gonic/gin"
@@ -14,13 +13,11 @@ import (
 
 type Handler struct {
 	Chat logic.ChatLogic
-	Hub  *ws.Hub
 }
 
-func NewHandler(h *ws.Hub, c logic.ChatLogic) *Handler {
+func NewHandler(c logic.ChatLogic) *Handler {
 	return &Handler{
 		Chat: c,
-		Hub: h,
 	}
 }
 
@@ -30,12 +27,6 @@ func (h *Handler) CreateRoom(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	h.Hub.Rooms[req.ID] = &ws.Room{
-		ID:      req.ID,
-		Name:    req.Name,
-		Clients: make(map[string]*ws.Client),
-	}
-
 	res, err := h.Chat.Insert(&gin.Context{}, req)
 	if err != nil {
 		c.JSON(http.StatusConflict, models.Response{
@@ -46,6 +37,32 @@ func (h *Handler) CreateRoom(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, res)
+}
+
+func (h *Handler) GetRooms(c *gin.Context) {
+	var req req.CreateRoomReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, models.Response{
+			StatusCode: http.StatusBadRequest,
+			Message:    err.Error(),
+			Data:       nil,
+		})
+		return
+	}
+	res, err := h.Chat.Select(c, req)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, models.Response{
+			StatusCode: http.StatusUnauthorized,
+			Message:    err.Error(),
+			Data:       nil,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, models.Response{
+		StatusCode: http.StatusOK,
+		Message:    "Lấy thông tin thành công",
+		Data:       res,
+	})
 }
 
 // xử lý websocket
@@ -60,28 +77,30 @@ var upgrader = websocket.Upgrader{
 }
 
 func (h *Handler) JoinRoom(c *gin.Context) {
+	//nâng cấp kết nối HTTP lên kết nối Websocket
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
+	//lấy dữ liệu từ URL
 	roomID := c.Param("roomId")
-	clientID := c.Query("userId")
+	userID := c.Query("userId")
 	username := c.Query("username")
 
 	cl := &ws.Client{
 		Conn:     conn,
-		Message:  make(chan *ws.Message, 10),
-		ID:       clientID,
+		Message:  make(chan *ws.Message),
+		ID:       userID,
 		RoomID:   roomID,
-		Username: username,
+		UserName: username,
 	}
 
 	m := &ws.Message{
-		Content:  "A new user has joined the room",
-		RoomID:   roomID,
-		Username: username,
+		Content: "A new user has joined the room",
+		RoomID:  roomID,
+		UserID:  userID,
 	}
 
 	//Đăng ký một client mới thông qua channal đăng ký
@@ -94,34 +113,21 @@ func (h *Handler) JoinRoom(c *gin.Context) {
 	cl.ReadMess(h.Hub)
 }
 
-func (h *Handler) GetRooms(c *gin.Context) {
-	rooms := make([]res.RoomRes, 0)
+// func (h *Handler) GetClient(c *gin.Context) {
+// 	var client []res.ClientRes
+// 	roomId := c.Param("roomId")
 
-	for _, r := range h.Hub.Rooms {
-		rooms = append(rooms, res.RoomRes{
-			ID:   r.ID,
-			Name: r.Name,
-		})
-	}
+// 	if _, ok := h.Hub.Rooms[roomId]; !ok {
+// 		client = make([]res.ClientRes, 0)
+// 		c.JSON(http.StatusOK, client)
+// 	}
 
-	c.JSON(http.StatusOK, rooms)
-}
+// 	for _, c := range h.Hub.Rooms[roomId].Clients {
+// 		client = append(client, res.ClientRes{
+// 			ID:       c.ID,
+// 			Username: c.Username,
+// 		})
+// 	}
 
-func (h *Handler) GetClient(c *gin.Context) {
-	var client []res.ClientRes
-	roomId := c.Param("roomId")
-
-	if _, ok := h.Hub.Rooms[roomId]; !ok {
-		client = make([]res.ClientRes, 0)
-		c.JSON(http.StatusOK, client)
-	}
-
-	for _, c := range h.Hub.Rooms[roomId].Clients {
-		client = append(client, res.ClientRes{
-			ID:       c.ID,
-			Username: c.Username,
-		})
-	}
-
-	c.JSON(http.StatusOK, client)
-}
+// 	c.JSON(http.StatusOK, client)
+// }

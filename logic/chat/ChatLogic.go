@@ -2,9 +2,12 @@ package chatlogic
 
 import (
 	"context"
+	"database/sql"
+	"thuchanh_go/banana"
 	"thuchanh_go/database"
 	"thuchanh_go/logic"
 	"thuchanh_go/types/req"
+	"thuchanh_go/types/res"
 
 	"github.com/labstack/gommon/log"
 )
@@ -27,3 +30,19 @@ func (c *ChatRoomLogic) Insert(ctx context.Context, room req.CreateRoomReq) (req
 	}
 	return room, nil
 }
+
+func (c *ChatRoomLogic) Select(ctx context.Context, req req.CreateRoomReq) (res.RoomRes, error) {
+	room := res.RoomRes{}
+	statement := `SELECT * FROM room WHERE name = $1`
+	err := c.sql.Db.GetContext(ctx, &room, statement, req.Name)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return room, banana.RoomNotFoud
+		}
+		log.Error(err.Error())
+		return room, err
+	}
+
+	return room, nil
+}
+
