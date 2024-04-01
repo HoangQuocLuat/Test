@@ -42,7 +42,15 @@ func (c *ChatRoomLogic) Select(ctx context.Context, req req.CreateRoomReq) (res.
 		log.Error(err.Error())
 		return room, err
 	}
-
 	return room, nil
 }
 
+func (c *ChatRoomLogic) InsertMess(ctx context.Context, mess req.Message) error {
+	statement := `INSERT INTO message (roomid, sender, content) 
+	            VALUES(:roomid, :sender, :content)`
+	_, err := c.sql.Db.NamedExecContext(ctx, statement, mess)
+	if err != nil {
+		log.Error(err.Error())
+	}
+	return nil
+}

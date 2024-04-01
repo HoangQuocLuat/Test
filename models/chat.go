@@ -1,13 +1,11 @@
 package models
 
-type Room struct {
-	ID   string `db:"id"`
-	Name string `db:"name"`
-}
+
 
 type Message struct {
 	ID      string `db:"id"`
-	RoomID  string `db:"roomId"`
-	UserID  string `db:"userId"`
+	RoomID  string `db:"roomid"`
+	Sender  string `db:"sender"`
 	Content string `db:"content"`
+	
 }

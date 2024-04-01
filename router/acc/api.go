@@ -18,7 +18,7 @@ func (api *API) SetupRoute() {
 	api.Gin.GET("/user/login", api.AccHandler.LoginHandler())
 
 	api.Gin.POST("/ws/createRoom", api.WebHandler.CreateRoom)
-	// api.Gin.GET("ws/joinRoom/:roomId", api.WebHandler.JoinRoom)
+	api.Gin.GET("ws/joinRoom/:roomId", api.WebHandler.JoinRoom)
 	api.Gin.GET("ws/getRooms", api.WebHandler.GetRooms)
 	// api.Gin.GET("ws/getClient/:roomId", api.WebHandler.GetClient)
 }

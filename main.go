@@ -9,10 +9,11 @@ import (
 	"thuchanh_go/database"
 	handler "thuchanh_go/handler/account"
 	chathandler "thuchanh_go/handler/chat"
-	logic "thuchanh_go/logic/account"
+	logicacc "thuchanh_go/logic/account"
 	chatlogic "thuchanh_go/logic/chat"
 	"thuchanh_go/redis"
 	router "thuchanh_go/router/acc"
+	"thuchanh_go/ws"
 
 	"github.com/gin-gonic/gin"
 )
@@ -45,16 +46,18 @@ func main() {
 	redis.Connect()
 
 	//Hand Chat
-	// hub := ws.NewHub()
+	room := ws.NewRoom()
 	wsHandler := chathandler.Handler{
 		Chat: chatlogic.NewChatLogic(sql),
-		// Hub:  hub,
+		Room: room,
 	}
-	// go hub.Run()
+
+	// Khởi tạo Handler
+	go room.Run()
 
 	//Hand Account
 	userHandler := handler.AccountHandler{
-		UserLogic: logic.NewAccRegisterLogic(sql),
+		UserLogic: logicacc.NewAccRegisterLogic(sql),
 		Rd:        redis,
 	}
 

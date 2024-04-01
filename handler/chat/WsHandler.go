@@ -1,6 +1,7 @@
 package chathandler
 
 import (
+	"fmt"
 	"net/http"
 	"thuchanh_go/logic"
 	"thuchanh_go/models"
@@ -13,11 +14,13 @@ import (
 
 type Handler struct {
 	Chat logic.ChatLogic
+	Room *ws.Room
 }
 
-func NewHandler(c logic.ChatLogic) *Handler {
+func NewHandler(c logic.ChatLogic, r *ws.Room) *Handler {
 	return &Handler{
 		Chat: c,
+		Room: r,
 	}
 }
 
@@ -89,28 +92,22 @@ func (h *Handler) JoinRoom(c *gin.Context) {
 	userID := c.Query("userId")
 	username := c.Query("username")
 
-	cl := &ws.Client{
-		Conn:     conn,
-		Message:  make(chan *ws.Message),
-		ID:       userID,
-		RoomID:   roomID,
-		UserName: username,
-	}
-
-	m := &ws.Message{
+	cl := ws.NewClient(conn, userID, roomID, username, h.Chat)
+	ms := &req.Message{
 		Content: "A new user has joined the room",
 		RoomID:  roomID,
-		UserID:  userID,
+		Sender:  username,
 	}
 
 	//Đăng ký một client mới thông qua channal đăng ký
-	h.Hub.Register <- cl
+	h.Room.Register <- cl
 	// và phát tin nhắn đó
-	h.Hub.Broadcast <- m
+	h.Room.Broadcast <- ms
 	//writeMess()
 	go cl.WriteMess()
 	//readMess()
-	cl.ReadMess(h.Hub)
+	cl.ReadMess(h.Room)
+	fmt.Print("bbbb", ms)
 }
 
 // func (h *Handler) GetClient(c *gin.Context) {
